@@ -15,8 +15,27 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.http import HttpResponse
+
+def home(request):
+    html = """
+    <!doctype html>
+    <html lang="ru">
+      <head>
+        <meta charset="utf-8">
+        <title>Привет!</title>
+      </head>
+      <body>
+        <h1>Привет! Django + MSSQL работает.</h1>
+      </body>
+    </html>
+    """
+    # Указываем charset явно
+    return HttpResponse(html, content_type="text/html")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('', home, name='home'),             # ← корневой URL
+    path('admin/', admin.site.urls),        # стандартный админ
+    path('', include('core.urls')),         # API core попадает в корень сайта
 ]
