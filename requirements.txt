@@ -13,7 +13,6 @@ crispy-bootstrap5==2025.6
 Django==5.2.6
 django-allauth==65.11.2
 django-crispy-forms==2.4
-django-redis==6.0.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 easy-thumbnails==2.10.1
@@ -36,7 +35,6 @@ pytest-django==4.11.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
 pytz==2025.2
-redis==6.4.0
 setuptools==80.9.0
 six==1.17.0
 sqlparse==0.5.3
