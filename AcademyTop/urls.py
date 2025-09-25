@@ -37,5 +37,5 @@ def home(request):
 urlpatterns = [
     path('', home, name='home'),             # ← корневой URL
     path('admin/', admin.site.urls),        # стандартный админ
-    path('', include('core.urls')),         # API core попадает в корень сайта
+    path('api/', include('core.urls')),         # API core попадает в корень сайта
 ]

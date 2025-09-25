@@ -3,29 +3,29 @@ from rest_framework import viewsets, permissions
 from .models import Product
 from .serializers import ProductSerializer
 
-# Create your views here.
-
-""" 
-- viewsets.ModelViewSet – готовый класс, который уже реализует все действия. 
-Не нужно писать отдельные функции‑контроллеры.
-- queryset – откуда брать данные (по умолчанию берёт всё).
-- serializer_class – какой сериализатор использовать для ввода/вывода.
-- permission_classes – список проверок прав; IsAuthenticated требует, 
-чтобы запрос прошёл через JWT-аутентификатор, который мы подключили в settings.py (REST_FRAMEWORK).
-"""
-
+# Создаем представление для модели Product с помощью ModelViewSet
+# ModelViewSet автоматически реализует все CRUD-операции (создание, чтение, обновление, удаление)
 class ProductViewSet(viewsets.ModelViewSet):
     """
-    Полный набор CRUD-операций для Product:
-    - GET /api/products/           → список
-    - POST /api/products/          → создать
-    - GET /api/products/<id>/      → детали
-    - PUT /api/products/<id>/      → полное обновление
-    - PATCH /api/products/<id>/    → частичное обновление
-    - DELETE /api/products/<id>/   → удалить
+    Полный набор CRUD-операций для модели Product:
+    - GET /api/products/           → получение списка всех продуктов
+    - POST /api/products/          → создание нового продукта
+    - GET /api/products/<id>/      → получение деталей конкретного продукта
+    - PUT /api/products/<id>/      → полное обновление продукта
+    - PATCH /api/products/<id>/    → частичное обновление продукта
+    - DELETE /api/products/<id>/   → удаление продукта
+
+    Все эти операции доступны через API-эндпоинты, которые автоматически создаются Django REST Framework.
     """
+    # Определяем, из какой модели брать данные для представления
+    queryset = Product.objects.all()
     
-    queryset = Product.objects.all()            # набор всех записей
-    serializer_class = ProductSerializer        # какой сериализатор использовать
-    permission_classes = [permissions.IsAuthenticated]  # только авторизованны с JWT‑токеном
+    # Указываем, какой сериализатор использовать для преобразования данных
+    # Сериализатор отвечает за преобразование объектов модели в JSON и обратно
+    serializer_class = ProductSerializer
+
+    # Определяем права доступа к ресурсу
+    # IsAuthenticated означает, что только авторизованные пользователи (с JWT-токеном)
+    # могут выполнять операции с продуктами
+    permission_classes = [permissions.IsAuthenticated]
 
