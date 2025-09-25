@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "rest_framework",
-    "django_redis",
     "core",
     "user",
 ]
@@ -82,22 +81,30 @@ WSGI_APPLICATION = 'AcademyTop.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        "ENGINE": "mssql",
-        "NAME": os.getenv("MS_SQL_DB", "master"),
-        "USER": os.getenv("MS_SQL_LOGIN"),
-        "PASSWORD": os.getenv("MS_SQL_PASS"),
-        "HOST": os.getenv("MS_SQL_SERVER"),
-        "PORT": "",                     # по умолчанию 1433
-        "OPTIONS": {
-            "driver": os.getenv("MS_SQL_DRIVER", "ODBC Driver 18 for SQL Server"),
-            "unicode_results": True,
-            # Если ваш сервер использует Windows Authentication:
-            # "trusted_connection": "yes",
-        },
+if os.getenv('USE_SQLITE', 'false').lower() in ['true', '1', 'yes', 'on']:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            "ENGINE": "mssql",
+            "NAME": os.getenv("MS_SQL_DB", "master"),
+            "USER": os.getenv("MS_SQL_LOGIN"),
+            "PASSWORD": os.getenv("MS_SQL_PASS"),
+            "HOST": os.getenv("MS_SQL_SERVER"),
+            "PORT": "",                     # по умолчанию 1433
+            "OPTIONS": {
+                "driver": os.getenv("MS_SQL_DRIVER", "ODBC Driver 18 for SQL Server"),
+                "unicode_results": True,
+                # Если ваш сервер использует Windows Authentication:
+                # "trusted_connection": "yes",
+            },
+        }
+    }
 
 
 # Password validation
