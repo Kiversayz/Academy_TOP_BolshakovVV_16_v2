@@ -148,6 +148,10 @@ FILE_CHARSET = "utf-8"
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"   # для collectstatic в продакшн
 
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 

@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from django.conf import settings
+from django.conf.urls.static import static
 
 def home(request):
     html = """
@@ -38,4 +40,9 @@ urlpatterns = [
     path('', home, name='home'),             # ← корневой URL
     path('admin/', admin.site.urls),        # стандартный админ
     path('api/', include('core.urls')),         # API core попадает в корень сайта
+    path('nursery/', include('nursery.urls')),      # API nursery попадает в корень сайта
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

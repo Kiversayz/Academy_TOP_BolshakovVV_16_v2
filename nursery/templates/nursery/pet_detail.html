@@ -1,0 +1,31 @@
+{% extends "nursery/base.html" %}
+
+{% block title %}{{ pet.name }}{% endblock %}
+
+{% block content %}
+    <h1>{{ pet.name }}</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            {% if pet.image %}
+                <img src="{{ pet.image.url }}" class="img-fluid" alt="{{ pet.name }}">
+            {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                    Нет фото
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h3>Информация</h3>
+            <p><strong>Порода:</strong> {{ pet.breed }}</p>
+            <p><strong>Семейство:</strong> {{ pet.family }}</p>
+            <p><strong>Тип:</strong> {{ pet.get_animal_type_display }}</p>
+            <p><strong>Возраст:</strong> {{ pet.age }} месяцев</p>
+            <p><strong>Цена:</strong> {{ pet.price }} {{ pet.currency }}</p>
+            <p><strong>Гипоаллергенный:</strong> {% if pet.hypoallergenic %}Да{% else %}Нет{% endif %}</p>
+            <p><strong>Рацион:</strong> {{ pet.feeding_type|default:"Не указан" }}</p>
+            <p><strong>Описание:</strong> {{ pet.description|default:"Нет описания" }}</p>
+            <a href="{% url 'pet_list' %}" class="btn btn-secondary">Назад к питомцам</a>
+        </div>
+    </div>
+{% endblock %}

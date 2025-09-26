@@ -1,0 +1,35 @@
+{% extends "nursery/base.html" %}
+
+{% block title %}Питомцы в продаже{% endblock %}
+
+{% block content %}
+    <h1>Питомцы в продаже</h1>
+
+    {% if pets %}
+        <div class="row">
+            {% for pet in pets %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        {% if pet.image %}
+                            <img src="{{ pet.image.url }}" class="card-img-top" alt="{{ pet.name }}">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                Нет фото
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ pet.name }}</h5>
+                            <p class="card-text">
+                                Порода: {{ pet.breed }}<br>
+                                Цена: {{ pet.price }} {{ pet.currency }}
+                            </p>
+                            <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-primary">Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Питомцев пока нет в наличии.</p>
+    {% endif %}
+{% endblock %}
