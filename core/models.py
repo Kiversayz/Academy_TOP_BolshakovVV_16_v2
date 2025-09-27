@@ -1,6 +1,8 @@
 from django.db import models
+from nursery.models import Pet
 
 # Create your models here.
+#оставлю модель на будущее, в друг добавлю товары для питомника
 class Product(models.Model):
     """ Простейшая модель для проверки соединения. """
     name = models.CharField(max_length=200, unique=True)
@@ -14,3 +16,14 @@ class Product(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.price}'
+
+class PetComment(models.Model):
+    pet = models.ForeignKey(Pet, on_delete=models.CASCADE, related_name='comments')
+    author_name = models.CharField(max_length=100, verbose_name='Имя автора')
+    comment_text = models.TextField(verbose_name='Текст комментария')
+    creat_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата комментария')
+
+    def __str__(self):
+        return f'Коммментарий к {self.pet.name} от {self.author_name}'
+
+

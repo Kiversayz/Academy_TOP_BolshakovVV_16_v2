@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
-from .models import Product
-from .serializers import ProductSerializer
+from .models import Product, PetComment
+from .serializers import ProductSerializer, PetCommentSerializer
 
 # Создаем представление для модели Product с помощью ModelViewSet
 # ModelViewSet автоматически реализует все CRUD-операции (создание, чтение, обновление, удаление)
@@ -27,5 +27,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     # Определяем права доступа к ресурсу
     # IsAuthenticated означает, что только авторизованные пользователи (с JWT-токеном)
     # могут выполнять операции с продуктами
+    permission_classes = [permissions.IsAuthenticated]
+
+class PetCommentViewSet(viewsets.ModelViewSet):
+    queryset = PetComment.objects.all()
+    serializer_class = PetCommentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
