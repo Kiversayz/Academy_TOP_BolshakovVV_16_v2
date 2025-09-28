@@ -9,6 +9,6 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(PetComment)
 class PetCommentAdmin(admin.ModelAdmin):
-    list_display = ('content', 'pet', 'created_at')
-    list_filter = ('pet', 'created_at')
-    search_fields = ('author_name', 'comment_text')
+    list_display = ['pet', 'author_name', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['author_name', 'content']

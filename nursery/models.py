@@ -23,6 +23,11 @@ class Pet(models.Model):
     description = models.TextField(verbose_name="Описание", blank=True)
     image = models.ImageField(upload_to='pets/', verbose_name="Фотография", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата добавления")
+    
+    class Meta:
+        db_table = 'nursery_pet'  # Имя таблицы в базе данных
+        verbose_name = 'Питомник'  # Название модели в админке
+        verbose_name_plural = "Питомники" # Имя множественного числа модели в админке
 
     def __str__(self):
         return f"{self.name} ({self.breed})"
