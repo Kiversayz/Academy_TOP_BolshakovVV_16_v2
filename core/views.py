@@ -1,7 +1,10 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
+from rest_framework_simplejwt.tokens import Token
 from .models import Product, PetComment
 from .serializers import ProductSerializer, PetCommentSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 # Создаем представление для модели Product с помощью ModelViewSet
 # ModelViewSet автоматически реализует все CRUD-операции (создание, чтение, обновление, удаление)
@@ -34,3 +37,10 @@ class PetCommentViewSet(viewsets.ModelViewSet):
     serializer_class = PetCommentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        return super().get_token(user)
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

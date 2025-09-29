@@ -1,12 +1,12 @@
 import requests
-import time
 
-BASE_URL = 'http://127.0.0.1:8000'
+# Получаем токен через API
+auth_response = requests.post("http://127.0.0.1:8000/api/auth/token/", json={
+    "username": "testuser",
+    "password": "ys6-xRK-6y6-H8y"
+})
 
-def test_get_pets_list():
-    """ Тестируем получение списка питомцев и питомника"""
-    response = requests.get(f'{BASE_URL}/nursery/')
-    assert response.status_code == 200
-    assert "Питомцы в продаже" in response.text  # заголовок из шаблона
+token = auth_response.json()['access']
+print(token)
 
 
