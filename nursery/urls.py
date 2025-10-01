@@ -1,16 +1,10 @@
-from django.urls import path, include
+from django.urls import path
 from . import views
-from rest_framework.routers import DefaultRouter
-
-#Создаём экземпляр DefaultRouter
-router = DefaultRouter()
-router.register(r'pet', views.PetViewSet)  # → /api/petcomments/ …
-urlpatterns = [
-    path('', include(router.urls))              # «вклеиваем» все сгенерированные пути
-]
 
 urlpatterns = [
     path('', views.pet_list, name='pet_list'),
-    path('', include(router.urls)),
     path('<int:pk>/', views.pet_detail, name='pet_detail'),
+    path('create/', views.pet_create, name='pet_create'),
+    path('<int:pk>/update/', views.pet_update, name='pet_update'),
+    path('<int:pk>/delete/', views.pet_delete, name='pet_delete'),
 ]
