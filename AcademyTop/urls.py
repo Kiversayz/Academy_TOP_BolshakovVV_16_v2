@@ -20,6 +20,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from django.contrib.auth import views as auth_views
 
 def home(request):
     html = """
@@ -46,6 +47,9 @@ urlpatterns = [
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/', include('core.urls')),         # API core попадает в корень сайта
     path('nursery/', include('nursery.urls')),      # API nursery попадает в корень сайта
+    # HTML-авторизация
+    path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]
 
 if settings.DEBUG:

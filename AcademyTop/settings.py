@@ -65,10 +65,11 @@ ROOT_URLCONF = 'AcademyTop.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -181,3 +182,6 @@ SPECTACULAR_SETTINGS = {
 # ---------- 11. Crispy Forms ----------
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+LOGIN_URL = '/accounts/login/'  # ← или 'login' если используешь именованный URL
+LOGIN_REDIRECT_URL = '/nursery/'  # ← Куда перенаправить после входа

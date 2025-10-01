@@ -3,7 +3,10 @@
 {% block title %}Питомцы в продаже{% endblock %}
 
 {% block content %}
-    <h1>Питомцы в продаже</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Питомцы в продаже</h1>
+        <a href="{% url 'pet_create' %}" class="btn btn-success">Добавить питомца</a>
+    </div>
 
     {% if pets %}
         <div class="row">

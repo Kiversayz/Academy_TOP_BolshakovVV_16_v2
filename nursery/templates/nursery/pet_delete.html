@@ -1,0 +1,13 @@
+{% extends "nursery/base.html" %}
+
+{% block title %}Удалить {{ pet.name }}?{% endblock %}
+
+{% block content %}
+    <h1>Удалить {{ pet.name }}?</h1>
+    <p>Вы уверены, что хотите удалить питомца "{{ pet.name }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Да, удалить</button>
+        <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-secondary">Отмена</a>
+    </form>
+{% endblock %}
