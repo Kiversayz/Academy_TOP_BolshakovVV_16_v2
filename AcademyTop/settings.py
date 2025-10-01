@@ -184,4 +184,4 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 LOGIN_URL = '/accounts/login/'  # ← или 'login' если используешь именованный URL
-LOGIN_REDIRECT_URL = '/nursery/'  # ← Куда перенаправить после входа
+LOGIN_REDIRECT_URL = '/'  # ← Куда перенаправить после входа

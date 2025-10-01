@@ -1,14 +1,14 @@
-{% extends "nursery/base_nursery.html" %}
+{% extends "base.html" %}
 {% load crispy_forms_tags %}
 
-{% block title %}Редактировать {{ pet.name }}{% endblock %}
+{% block title %}Редактировать профиль{% endblock %}
 
 {% block content %}
-    <h1>Редактировать {{ pet.name }}</h1>
+    <h1>Редактировать профиль</h1>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form|crispy }}
         <button type="submit" class="btn btn-primary">Сохранить</button>
-        <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-secondary">Отмена</a>
+        <a href="{% url 'profile' %}" class="btn btn-secondary">Отмена</a>
     </form>
 {% endblock %}
