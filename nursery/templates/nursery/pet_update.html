@@ -5,6 +5,18 @@
 
 {% block content %}
     <h1>Редактировать {{ pet.name }}</h1>
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            Пожалуйста, исправьте ошибки:
+            {{ form.non_field_errors }}
+            {{ form.name.errors }}
+            {{ form.breed.errors }}
+            {{ form.family.errors }}
+            {{ form.price.errors }}
+            {{ form.currency.errors }}
+            {{ form.image.errors }}
+        </div>
+    {% endif %}
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form|crispy }}
