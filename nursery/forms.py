@@ -9,7 +9,7 @@ class PetForm(forms.ModelForm):
             'animal_type',
             'breed',
             'family',
-            'age',
+            'birth_date',
             'price',
             'currency',
             'hypoallergenic',

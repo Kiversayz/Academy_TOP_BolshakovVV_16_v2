@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import date
 
 # Create your models here.
 
@@ -17,7 +20,7 @@ class Pet(models.Model):
     animal_type = models.CharField(max_length=20, choices=ANIMAL_TYPES, verbose_name="Тип животного")
     breed = models.CharField(max_length=100, verbose_name="Порода")
     family = models.CharField(max_length=100, verbose_name="Семейство")
-    age = models.PositiveIntegerField(verbose_name="Возраст (в месяцах)")
+    birth_date = models.DateField(verbose_name="Дата рождения", blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Цена")
     currency = models.CharField(max_length=3, default="RUB", verbose_name="Валюта")
     hypoallergenic = models.BooleanField(default=False, verbose_name="Гипоаллергенный")
@@ -36,3 +39,31 @@ class Pet(models.Model):
 
     def get_absolute_url(self):
         return reverse("pet_detail", kwargs={"pk": self.pk})
+    
+    def clean(self):
+        if self.birth_date:
+            if self.birth_date > date.today():
+                raise ValidationError("Дата рождения не может быть в будущем.")
+            if self.birth_date < date.today().replace(year=date.today().year - 50):
+                raise ValidationError("Дата рождения не может быть более 50 лет назад.")
+
+    def get_age_in_months(self):
+        """Возвращает возраст питомца в месяцах на основе даты рождения."""
+        if not self.birth_date:
+            return None  # Если дата рождения не указана — возраст неизвестен
+
+        today = date.today()
+        birth = self.birth_date
+
+        # Разница в годах и месяцах
+        year_diff = today.year - birth.year
+        month_diff = today.month - birth.month
+
+        # Общий возраст в месяцах
+        age_in_months = year_diff * 12 + month_diff
+
+        # Если день рождения в этом месяце ещё не наступил — вычитаем 1 месяц
+        if today.day < birth.day:
+            age_in_months -= 1
+
+        return max(age_in_months, 0)  # Возраст не может быть отрицательным
