@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация завершена{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2>Регистрация завершена!</h2>
+            <p>Спасибо за регистрацию, {{ username }}.</p>
+            <p>На ваш email - "{{ email }}" было отправлено письмо с сгенерированным паролем. Пожалуйста, проверьте почту и войдите в систему.</p>
+            <a href="{% url 'login' %}" class="btn btn-primary">Войти</a>
+        </div>
+    </div>
+{% endblock %}
