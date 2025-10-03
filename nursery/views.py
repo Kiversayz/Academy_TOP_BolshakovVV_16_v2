@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Pet
 from .serializers import PetSerializer
 from .forms import PetForm
+from django.http import HttpResponseForbidden
 
 # Create your views here.
 
@@ -32,7 +33,9 @@ def pet_create(request):
     if request.method == 'POST':
         form = PetForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            pet = form.save(commit=False)  # Не сохраняем в БД пока
+            pet.owner = request.user       # Устанавливаем владельца
+            pet.save() 
             return redirect('pet_list')
         # Если форма не валидна, просто продолжаем вниз (рендерим форму с ошибками)
     else:
@@ -49,6 +52,10 @@ def pet_update(request, pk):
     Обновляет информацию о конкретном животном.
     """
     pet = get_object_or_404(Pet, pk=pk)
+    
+    if pet.owner != request.user and not request.user.is_staff:
+        return HttpResponseForbidden("Вы не являетесь владельцем этого питомца.")
+    
     if request.method == 'POST':
         form = PetForm(request.POST, request.FILES, instance=pet)
         if form.is_valid():
@@ -66,6 +73,10 @@ def pet_delete(request, pk):
     Удаляет конкретное животное.
     """
     pet = get_object_or_404(Pet, pk=pk)
+    
+    if pet.owner != request.user and not request.user.is_staff:
+        return HttpResponseForbidden("Вы не являетесь владельцем этого питомца.")
+    
     if request.method == 'POST':
         pet.delete()
         return redirect('pet_list')  # Перенаправляем на список

@@ -10,6 +10,7 @@
             <a href="{% url 'pet_delete' pet.pk %}" class="btn btn-danger">Удалить</a>
         </div>
     </div>
+    <p><strong>Владелец:</strong> {{ pet.owner.username }}</p>
 
     <div class="row">
         <div class="col-md-6">

@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.urls import reverse
 
 # Create your models here.
@@ -11,6 +12,7 @@ class Pet(models.Model):
         ('fish', 'Рыба'),
         ('other', 'Другое'),
     ]
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pets')
     name = models.CharField(max_length=100, verbose_name="Кличка")
     animal_type = models.CharField(max_length=20, choices=ANIMAL_TYPES, verbose_name="Тип животного")
     breed = models.CharField(max_length=100, verbose_name="Порода")
