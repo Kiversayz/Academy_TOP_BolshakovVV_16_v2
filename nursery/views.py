@@ -1,88 +1,78 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from rest_framework import viewsets, permissions
-from django.contrib.auth.decorators import login_required
 from .models import Pet
 from .serializers import PetSerializer
 from .forms import PetForm
 from django.http import HttpResponseForbidden
 
-# Create your views here.
+# ========================
+# CBV (Class-Based Views)
+# ========================
 
-
-def pet_list(request):
+class PetListView(ListView):
     """
     Отображает список всех животных.
     """
-    pets = Pet.objects.all()
-    return render(request=request, template_name='nursery/pet_list.html', context={'pets': pets})
+    model = Pet
+    template_name = 'nursery/pet_list.html'
+    context_object_name = 'pets'
 
-
-def pet_detail(request, pk):
+class PetDetailView(DetailView):
     """
     Отображает детальную информацию о конкретном животном.
     """
-    pet = get_object_or_404(klass=Pet, pk=pk)
-    return render(request=request, template_name='nursery/pet_detail.html', context={'pet': pet})
+    model = Pet
+    template_name = 'nursery/pet_detail.html'
+    context_object_name = 'pet'
 
-
-@login_required
-def pet_create(request):
+class PetCreateView(LoginRequiredMixin, CreateView):
     """
     Создает новое животное.
     """
-    if request.method == 'POST':
-        form = PetForm(request.POST, request.FILES)
-        if form.is_valid():
-            pet = form.save(commit=False)  # Не сохраняем в БД пока
-            pet.owner = request.user       # Устанавливаем владельца
-            pet.save() 
-            return redirect('pet_list')
-        # Если форма не валидна, просто продолжаем вниз (рендерим форму с ошибками)
-    else:
-        # Если GET-запрос — создаем пустую форму
-        form = PetForm()
+    model = Pet
+    form_class = PetForm
+    template_name = 'nursery/pet_create.html'
+    success_url = reverse_lazy('pet_list')
 
-    # Рендерим шаблон в любом случае (и после POST с ошибками, и при GET)
-    return render(request, 'nursery/pet_create.html', {'form': form})
+    def form_valid(self, form):
+        # Устанавливаем владельца перед сохранением
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
-
-@login_required
-def pet_update(request, pk):
+class PetUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """
     Обновляет информацию о конкретном животном.
     """
-    pet = get_object_or_404(Pet, pk=pk)
-    
-    if pet.owner != request.user and not request.user.is_staff:
-        return HttpResponseForbidden("Вы не являетесь владельцем этого питомца.")
-    
-    if request.method == 'POST':
-        form = PetForm(request.POST, request.FILES, instance=pet)
-        if form.is_valid():
-            form.save()
-            return redirect('pet_detail', pk=pet.pk)
-    else:
-        form = PetForm(instance=pet)
+    model = Pet
+    form_class = PetForm
+    template_name = 'nursery/pet_update.html'
 
-    return render(request, 'nursery/pet_update.html', {'form': form, 'pet': pet})
+    def test_func(self):
+        pet = self.get_object()
+        # Владелец или админ может редактировать
+        return pet.owner == self.request.user or self.request.user.is_staff # type: ignore
 
+    def get_success_url(self):
+        return reverse_lazy('pet_detail', kwargs={'pk': self.object.pk}) # pyright: ignore[reportAttributeAccessIssue]
 
-@login_required
-def pet_delete(request, pk):
+class PetDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """
     Удаляет конкретное животное.
     """
-    pet = get_object_or_404(Pet, pk=pk)
-    
-    if pet.owner != request.user and not request.user.is_staff:
-        return HttpResponseForbidden("Вы не являетесь владельцем этого питомца.")
-    
-    if request.method == 'POST':
-        pet.delete()
-        return redirect('pet_list')  # Перенаправляем на список
+    model = Pet
+    template_name = 'nursery/pet_delete.html'
+    success_url = reverse_lazy('pet_list')
 
-    return render(request, 'nursery/pet_delete.html', {'pet': pet})
+    def test_func(self):
+        pet = self.get_object()
+        # Владелец или админ может удалять
+        return pet.owner == self.request.user or self.request.user.is_staff # type: ignore
 
+# ========================
+# API ViewSet (остаётся как есть)
+# ========================
 
 class PetViewSet(viewsets.ModelViewSet):
     """
