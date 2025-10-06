@@ -10,7 +10,6 @@
             <a href="{% url 'pet_delete' pet.pk %}" class="btn btn-danger">Удалить</a>
         </div>
     </div>
-    
 
     <div class="row">
         <div class="col-md-6">
@@ -40,6 +39,19 @@
             <p><strong>Гипоаллергенный:</strong> {% if pet.hypoallergenic %}Да{% else %}Нет{% endif %}</p>
             <p><strong>Рацион:</strong> {{ pet.feeding_type|default:"Не указан" }}</p>
             <p><strong>Описание:</strong> {{ pet.description|default:"Нет описания" }}</p>
+
+            <!-- Новая секция: Родословная -->
+            {% if pedigree %}
+                <h4>Родословная</h4>
+                <p><strong>Мать:</strong> {{ pedigree.mother|default:"Не указана" }}</p>
+                <p><strong>Отец:</strong> {{ pedigree.father|default:"Не указан" }}</p>
+                <p><strong>Поколение:</strong> {{ pedigree.generation|default:"1" }}</p>
+                <p><strong>Дата разведения:</strong> {{ pedigree.breeding_date|default:"Не указана" }}</p>
+                <p><strong>Примечания:</strong> {{ pedigree.notes|default:"Нет" }}</p>
+            {% else %}
+                <p><strong>Родословная:</strong> Не указана</p>
+            {% endif %}
+
             <a href="{% url 'pet_list' %}" class="btn btn-secondary">Назад к питомцам</a>
         </div>
     </div>

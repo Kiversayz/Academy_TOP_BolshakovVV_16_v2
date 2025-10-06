@@ -186,9 +186,27 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,  # Не показывать схему OpenAPI как отдельный эндпоинт
 }
 
-# ---------- 11. Crispy Forms ----------
+# ---------- Crispy Forms ----------
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 LOGIN_URL = '/accounts/login/'  # ← или 'login' если используешь именованный URL
 LOGIN_REDIRECT_URL = '/'  # ← Куда перенаправить после входа
+
+# Кэширование
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",  # URL Redis сервера
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# Опционально: использовать Redis для сессий
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+
+# Опционально: кэшировать статические файлы (если нужно)
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'

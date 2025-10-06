@@ -67,3 +67,15 @@ class Pet(models.Model):
             age_in_months -= 1
 
         return max(age_in_months, 0)  # Возраст не может быть отрицательным
+
+
+class Pedigree(models.Model):
+    pet = models.OneToOneField('Pet', on_delete=models.CASCADE, related_name='pedigree')  # ← Одна родословная на одного питомца
+    mother = models.CharField(max_length=100, verbose_name="Мать", blank=True, null=True)
+    father = models.CharField(max_length=100, verbose_name="Отец", blank=True, null=True)
+    generation = models.PositiveIntegerField(verbose_name="Поколение", default=1)
+    breeding_date = models.DateField(verbose_name="Дата разведения", blank=True, null=True)
+    notes = models.TextField(verbose_name="Примечания", blank=True, null=True)
+
+    def __str__(self):
+        return f"Родословная {self.pet.name}"

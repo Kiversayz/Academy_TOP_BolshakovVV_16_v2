@@ -1,5 +1,5 @@
 from django import forms
-from .models import Pet
+from .models import Pet, Pedigree
 
 class PetForm(forms.ModelForm):
     class Meta:
@@ -22,3 +22,9 @@ class PetForm(forms.ModelForm):
         # Можно настроить поля формы здесь
         # Например, сделать какие-то обязательными/опциональными
         # self.fields['feeding_type'].required = False
+
+
+class PedigreeForm(forms.ModelForm):
+    class Meta:
+        model = Pedigree
+        fields = ['mother', 'father', 'generation', 'breeding_date', 'notes']

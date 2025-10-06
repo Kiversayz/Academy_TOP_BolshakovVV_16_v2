@@ -21,6 +21,13 @@
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form|crispy }}
+        <h3>Родословная</h3>
+        {{ pedigree_formset.management_form }}
+        {% for form in pedigree_formset %}
+            <div class="border p-3 mb-3">
+                {{ form|crispy }}
+            </div>
+        {% endfor %}
         <button type="submit" class="btn btn-primary">Сохранить</button>
         <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-secondary">Отмена</a>
     </form>
