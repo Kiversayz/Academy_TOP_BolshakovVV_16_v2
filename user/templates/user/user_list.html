@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Список пользователей{% endblock %}
+
+{% block content %}
+    <h1>Пользователи</h1>
+    <div class="row">
+        {% for user in users %}
+            <div class="col-md-3 mb-3">
+                <div class="card {% if user == current_user %}border-primary{% endif %}">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" class="card-img-top" alt="{{ user.username }}">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 100px;">
+                            Нет аватара
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a href="{% url 'user:user_detail' user.pk %}">{{ user.username }}</a>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
