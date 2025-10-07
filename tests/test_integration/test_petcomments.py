@@ -16,7 +16,7 @@ def test_post_api_petcomments(BASE_URL, token_in_headers, create_petcomments_cor
 
     # Проверка статуса и содержимого
     assert response.status_code in [200, 201], f"Ошибка: {response.json()}"
-    assert data_response["author_name"] == "Testus" , f"Ошибка: {response.json()}"
+    assert data_response["author"] == "Testus" , f"Ошибка: {response.json()}"
     assert data_response["content"] == "test string" , f"Ошибка: {response.json()}"
     assert data_response['id'] ==  comment_id , f"Ошибка: {response.json()} - ожидался id: {comment_id}"
     assert data_response['pet'] ==  pet_id , f"Ошибка: {response.json()} - ожидался id: {pet_id}"
@@ -25,19 +25,19 @@ def test_post_api_petcomments(BASE_URL, token_in_headers, create_petcomments_cor
 @pytest.mark.parametrize("data, expected_status, description", [
     # 1. Полное изменение (PUT)
     (
-        {"author_name": "Testus_new", "content": "test string new", "pet": 2},
+        {"author": "Testus_new", "content": "test string new", "pet": 2},
         200,
         "Полное изменение комментария"
     ),
     # 2. Изменение без изменений (PUT с теми же данными)
     (
-        {"author_name": "Original Name", "content": "Original content", "pet": 1},
+        {"author": "Original Name", "content": "Original content", "pet": 1},
         200,
         "Изменение без изменений"
     ),
     # 3. Невалидное изменение — несуществующий ID
     (
-        {"author_name": "New Name", "content": "New content", "pet": 1},
+        {"author": "New Name", "content": "New content", "pet": 1},
         404,
         "Попытка изменить несуществующий комментарий"
     ),

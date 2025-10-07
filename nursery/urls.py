@@ -10,4 +10,5 @@ urlpatterns = [
     path('<int:pk>/delete/', views.PetDeleteView.as_view(), name='pet_delete'),
     path('<int:pk>/deactivate/', views.PetDeactivateView.as_view(), name='pet_deactivate'),
     path('<int:pk>/activate/', views.PetActivateView.as_view(), name='pet_activate'),
+    path('<int:pet_id>/comments/', views.PetCommentsListView.as_view(), name='pet_comments_list'),
 ]

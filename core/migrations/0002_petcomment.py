@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='PetComment',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('author_name', models.CharField(max_length=100, verbose_name='Имя автора')),
+                ('author', models.CharField(max_length=100, verbose_name='Имя автора')),
                 ('comment_text', models.TextField(verbose_name='Текст комментария')),
                 ('creat_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата комментария')),
                 ('pet', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='nursery.pet')),

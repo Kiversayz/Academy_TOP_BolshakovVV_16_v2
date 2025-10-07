@@ -72,4 +72,40 @@
             <a href="{% url 'pet_list' %}" class="btn btn-secondary">Назад к питомцам</a>
         </div>
     </div>
+    <!-- Cекция: Комментарии -->
+    <div class="mt-5">
+        <h3>Комментарии</h3>
+
+        <!-- Форма добавления комментария -->
+        {% if user.is_authenticated %}
+        <div class="mb-4">
+            <form method="post" action="{% url 'pet_detail' pet.pk %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ comment_form.content }}
+                    {% if comment_form.content.errors %}
+                    <div class="text-danger">
+                        {{ comment_form.content.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">Добавить комментарий</button>
+            </form>
+            {% if messages %}
+            {% for message in messages %}
+            {% if message.tags == 'error' %}
+            <div class="alert alert-danger mt-2">{{ message }}</div>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% else %}
+        <p><a href="{% url 'login' %}">Войдите</a>, чтобы оставить комментарий.</p>
+        {% endif %}
+
+        <!-- Блок с комментариями -->
+        <div id="comments-list">
+            {% include 'core/comments_partial.html' %} <!-- Подключаем шаблон списка комментариев -->
+        </div>
+    </div>
 {% endblock %}

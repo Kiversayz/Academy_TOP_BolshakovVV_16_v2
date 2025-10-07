@@ -12,6 +12,11 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 
+from core.models import PetComment
+from core.forms import PetCommentForm
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
+
 
 
 # ========================
@@ -44,28 +49,43 @@ class PetListView(ListView):
             return Pet.objects.filter(deactivated_at__isnull=True)
 
 class PetDetailView(DetailView):
-    """
-    Отображает детальную информацию о конкретном животном.
-    """
     model = Pet
     template_name = 'nursery/pet_detail.html'
     context_object_name = 'pet'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Пытаемся получить родословную, если она существует
-        try:
-            context['pedigree'] = self.object.pedigree  # type: ignore
-        except Pedigree.DoesNotExist:
-            context['pedigree'] = None
+        pet = self.object
+        
+        # --- Логика для комментариев ---
+        # Получаем комментарии для этого питомца, отсортированные по created_at (старые первыми)
+        # ordering = ['created_at'] в Meta должно это обеспечить, но явно укажем для надежности
+        comments = pet.comments.select_related('author__profile').all()   # type: ignore
 
-        # Добавляем информацию о правах пользователя
+        # select_related('author') оптимизирует запросы, извлекая данные User сразу
+        
+        # Форма для нового комментария
+        comment_form = PetCommentForm()
+
+        context['comments'] = comments
+        context['comment_form'] = comment_form
+        # -----------------------------
+
+        # ... (ваша существующая логика для pedigree, прав и т.д.) ...
+        try:
+            context['pedigree'] = pet.pedigree # type: ignore
+
+        except Pedigree.DoesNotExist: # Убедитесь, что Pedigree импортирован
+            context['pedigree'] = None
+            
         user = self.request.user
         context['is_moderator'] = user.groups.filter(name='Moderator').exists()
         context['is_admin'] = user.is_staff or user.is_superuser
-        context['is_owner'] = self.object.owner == user  # type: ignore
-        context['can_deactivate'] = self.object.can_deactivate(user)  # type: ignore
-        context['can_delete'] = self.object.can_delete(user) # type: ignore
+        context['is_owner'] = pet.owner == user # type: ignore
+
+        context['can_deactivate'] = pet.can_deactivate(user) # type: ignore
+
+        context['can_delete'] = pet.can_delete(user) # type: ignore
 
         return context
 
@@ -96,6 +116,38 @@ class PetDetailView(DetailView):
         self.object.increment_view_count(request.user)  # type: ignore
         return response
 
+        # --- Логика для добавления комментария ---
+    # Добавляем возможность POST-запроса к этой же странице для создания комментария
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object() # Получаем объект Pet
+        pet = self.object
+        
+        # Проверка аутентификации (можно вынести в декоратор или миксин)
+        if not request.user.is_authenticated:
+             # Можно вернуть ошибку или перенаправить на логин
+             from django.contrib.auth import REDIRECT_FIELD_NAME
+             from django.contrib.auth.views import redirect_to_login
+             return redirect_to_login(request.get_full_path(), REDIRECT_FIELD_NAME)
+        
+        form = PetCommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.pet = pet
+            comment.author = request.user # Устанавливаем автора
+            comment.save()
+            # Перенаправляем обратно на страницу питомца, чтобы обновить список комментариев
+            # return HttpResponseRedirect(request.path_info) # Простое обновление
+            from django.urls import reverse
+            return HttpResponseRedirect(reverse('pet_detail', args=[pet.pk])) # Явное указание URL
+        else:
+            # Если форма невалидна, отображаем страницу с ошибками
+            context = self.get_context_data()
+            context['comment_form'] = form # Передаем форму с ошибками
+            # Можно добавить сообщение об ошибке
+            from django.contrib import messages
+            messages.error(request, 'Ошибка при добавлении комментария. Проверьте форму.')
+            # Возвращаем тот же шаблон с контекстом (включая ошибки формы)
+            return self.render_to_response(context)
 class PetCreateView(LoginRequiredMixin, CreateView):
     """
     Создает новое животное.
@@ -198,3 +250,14 @@ class PetActivateView(LoginRequiredMixin, View):
         else:
             messages.error(request, "У вас нет прав для активации этого питомца.")
         return redirect('pet_detail', pk=pk)
+
+class PetCommentsListView(ListView):
+    model = PetComment
+    template_name = 'core/comments_partial.html' # Новый шаблон только для комментариев
+    context_object_name = 'comments'
+
+    def get_queryset(self):
+        pet_id = self.kwargs.get('pet_id')
+        # Фильтруем комментарии по pet_id и сортируем по created_at (старые первыми)
+        # ordering = ['created_at'] в Meta должно это обеспечить
+        return PetComment.objects.filter(pet_id=pet_id).select_related('author').order_by('created_at')

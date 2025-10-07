@@ -1,0 +1,35 @@
+<!-- core/templates/core/comments_partial_list.html -->
+{% load static %}
+{% for comment in comments %}
+<div class="comment border-bottom pb-3 mb-3">
+    <div class="d-flex align-items-start mb-2">
+        <!-- Аватар пользователя -->
+        {% if comment.author.profile.avatar %}
+        <a href="{% url 'user:user_detail' comment.author.pk %}">
+            <img src="{{ comment.author.profile.avatar.url }}" alt="{{ comment.author.username }}" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+        </a>
+        {% else %}
+        <!-- Если аватара нет, можно показать заглушку -->
+        <a href="{% url 'user:user_detail' comment.author.pk %}">
+            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-muted me-3" style="width: 40px; height: 40px; font-size: 0.7em;">
+                Нет<br>аватара
+            </div>
+        </a>
+        {% endif %}
+        <div>
+            <!-- Никнейм пользователя (кликабельный) -->
+            <a href="{% url 'user:user_detail' comment.author.pk %}" class="fw-bold text-decoration-none">
+                {{ comment.author.username }}
+            </a>
+            <!-- Дата комментария -->
+            <div class="small text-muted">{{ comment.created_at|date:"d M Y H:i" }}</div>
+        </div>
+    </div>
+    <!-- Текст комментария -->
+    <div class="ms-5">
+        {{ comment.content|linebreaksbr }}
+    </div>
+</div>
+{% empty %}
+<p>Пока нет комментариев.</p>
+{% endfor %}

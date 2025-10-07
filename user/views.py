@@ -93,7 +93,7 @@ class UserProfileView(LoginRequiredMixin, DetailView):
 class UserProfileUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = UserProfile
     form_class = UserProfileForm # Убедитесь, что форма существует
-    template_name = 'user/user_profile_update.html' # Убедитесь, что шаблон существует
+    template_name = 'user/profile_update.html' # Убедитесь, что шаблон существует
     # success_url можно определить в get_success_url
 
     def get_object(self, queryset=None):

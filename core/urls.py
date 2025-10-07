@@ -7,7 +7,7 @@ from nursery.views import PetViewSet
 DefaultRouter автоматически генерирует набор стандартных маршрутов для CRUD-операций 
 (list, create, retrieve, update, destroy, …) по имени модели. 
 """
-
+app_name = 'core'
 #Создаём экземпляр DefaultRouter
 router = DefaultRouter()
 #Регистрируем ViewSet для ProductViewSet

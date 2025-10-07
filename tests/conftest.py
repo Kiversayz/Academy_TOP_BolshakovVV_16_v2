@@ -71,7 +71,7 @@ def create_petcomments_core(BASE_URL, token_in_headers, create_pet_nursery):
     """ Создаем комментарий через API с валидным токеном """
     pet_id = create_pet_nursery['id']
     test_data = {
-        "author_name": "Testus",
+        "author": "Testus",
         "content": "test string",
         "pet": pet_id
     }
