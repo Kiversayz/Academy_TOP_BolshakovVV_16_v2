@@ -1,5 +1,35 @@
 import pytest
 import requests
+import os
+import sys
+from django.conf import settings
+
+# Добавляем корень проекта в PYTHONPATH
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+# Указываем settings, если они ещё не загружены
+if not settings.configured:
+    settings.configure(
+        DEBUG=True,
+        INSTALLED_APPS=[
+            'django.contrib.auth',
+            'django.contrib.contenttypes',
+            'nursery',
+            'user',
+            'core',
+        ],
+        DATABASES={
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': ':memory:',
+            }
+        },
+        USE_TZ=True,
+    )
+
+# Инициализируем Django
+import django
+django.setup()
 
 @pytest.fixture(scope="session")
 def BASE_URL():
