@@ -25,6 +25,7 @@
                             <p class="card-text">
                                 Порода: {{ pet.breed }}<br>
                                 Цена: {{ pet.price }} {{ pet.currency }}
+                                Просмотры: {{ pet.views_count|default:"0" }}
                             </p>
                             <a href="{% url 'pet_detail' pet.pk %}" class="btn btn-primary">Подробнее</a>
                         </div>

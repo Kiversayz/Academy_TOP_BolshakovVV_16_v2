@@ -4,6 +4,8 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import date
+from django.core.mail import send_mail
+from AcademyTop import settings
 
 # Create your models here.
 
@@ -29,6 +31,7 @@ class Pet(models.Model):
     image = models.ImageField(upload_to='pets/', verbose_name="Фотография", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата добавления")
     deactivated_at = models.DateTimeField(verbose_name="Дата деактивации", blank=True, null=True)
+    views_count = models.PositiveIntegerField(default=0, verbose_name="Количество просмотров")
     
     class Meta:
         db_table = 'nursery_pet'  # Имя таблицы в базе данных
@@ -97,6 +100,24 @@ class Pet(models.Model):
     def can_delete(self, user):
         """Проверяет, может ли пользователь удалить питомца."""
         return user.is_staff or user.is_superuser
+    
+    def increment_view_count(self, user):
+        """Увеличивает счётчик просмотров, если пользователь — не владелец."""
+        if self.owner != user:
+            self.views_count += 1
+            self.save()
+            # Если достигли 5 просмотров — отправить письмо
+            if self.views_count == 5:
+                self.send_popularity_notification()
+
+    def send_popularity_notification(self):
+        """Отправляет письмо владельцу, если питомец стал популярным."""
+        subject = f'Ваш питомец {self.name} пользуется популярностью!'
+        message = f'Привет!\n\nВаш питомец "{self.name}" уже достиг 5 просмотров.\n\nС уважением,\nКоманда AcademyTop'
+        from_email = settings.EMAIL_HOST_USER
+        recipient_list = [self.owner.email]
+
+        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
 
 
 class Pedigree(models.Model):

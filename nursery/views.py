@@ -55,7 +55,7 @@ class PetDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         # Пытаемся получить родословную, если она существует
         try:
-            context['pedigree'] = self.object.pedigree # type: ignore
+            context['pedigree'] = self.object.pedigree  # type: ignore
         except Pedigree.DoesNotExist:
             context['pedigree'] = None
 
@@ -63,8 +63,8 @@ class PetDetailView(DetailView):
         user = self.request.user
         context['is_moderator'] = user.groups.filter(name='Moderator').exists()
         context['is_admin'] = user.is_staff or user.is_superuser
-        context['is_owner'] = self.object.owner == user # type: ignore
-        context['can_deactivate'] = self.object.can_deactivate(user) # type: ignore
+        context['is_owner'] = self.object.owner == user  # type: ignore
+        context['can_deactivate'] = self.object.can_deactivate(user)  # type: ignore
         context['can_delete'] = self.object.can_delete(user) # type: ignore
 
         return context
@@ -89,6 +89,12 @@ class PetDetailView(DetailView):
 
     def get_success_url(self):
         return reverse_lazy('pet_detail', kwargs={'pk': self.object.pk}) # type: ignore
+    
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        # Увеличиваем счётчик просмотров, если пользователь — не владелец
+        self.object.increment_view_count(request.user)  # type: ignore
+        return response
 
 class PetCreateView(LoginRequiredMixin, CreateView):
     """

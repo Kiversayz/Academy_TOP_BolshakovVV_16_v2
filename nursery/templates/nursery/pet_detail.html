@@ -56,7 +56,7 @@
             <p><strong>Гипоаллергенный:</strong> {% if pet.hypoallergenic %}Да{% else %}Нет{% endif %}</p>
             <p><strong>Рацион:</strong> {{ pet.feeding_type|default:"Не указан" }}</p>
             <p><strong>Описание:</strong> {{ pet.description|default:"Нет описания" }}</p>
-
+            <p><strong>Просмотры:</strong> {{ pet.views_count|default:"0" }}</p>
             <!-- Новая секция: Родословная -->
             {% if pedigree %}
                 <h4>Родословная</h4>
