@@ -194,15 +194,24 @@ LOGIN_URL = '/accounts/login/'  # ← или 'login' если используе
 LOGIN_REDIRECT_URL = '/'  # ← Куда перенаправить после входа
 
 # Кэширование
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",  # URL Redis сервера
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+if os.getenv('USE_REDIS', 'False').lower() == 'true':
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": "redis://127.0.0.1:6379/1",
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
         }
     }
-}
+else:
+    # Используем кэш в памяти для разработки
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake"
+        }
+    }
 
 # Опционально: использовать Redis для сессий
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"

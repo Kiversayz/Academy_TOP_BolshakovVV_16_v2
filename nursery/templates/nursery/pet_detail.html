@@ -6,8 +6,25 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>{{ pet.name }}</h1>
         <div>
-            <a href="{% url 'pet_update' pet.pk %}" class="btn btn-warning">Редактировать</a>
-            <a href="{% url 'pet_delete' pet.pk %}" class="btn btn-danger">Удалить</a>
+            {% if can_deactivate %}
+                {% if pet.is_active %}
+                    <form method="post" action="{% url 'pet_deactivate' pet.pk %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning">Деактивировать</button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{% url 'pet_activate' pet.pk %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">Активировать</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            {% if is_owner or is_admin or is_moderator %}
+                <a href="{% url 'pet_update' pet.pk %}" class="btn btn-warning">Редактировать</a>
+            {% endif %}
+            {% if can_delete %}
+                <a href="{% url 'pet_delete' pet.pk %}" class="btn btn-danger">Удалить</a>
+            {% endif %}
         </div>
     </div>
 

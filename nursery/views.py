@@ -5,10 +5,13 @@ from rest_framework import viewsets, permissions
 from .models import Pet, Pedigree
 from .serializers import PetSerializer
 from .forms import PetForm, PedigreeForm
-from django.http import HttpResponseForbidden
 from django.forms import inlineformset_factory
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
+
 
 
 # ========================
@@ -32,6 +35,14 @@ class PetListView(ListView):
     template_name = 'nursery/pet_list.html'
     context_object_name = 'pets'
 
+    def get_queryset(self):
+        # Показываем только активных питомцев
+        # Если пользователь — модератор или админ, он видит и неактивных
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return Pet.objects.all()
+        else:
+            return Pet.objects.filter(deactivated_at__isnull=True)
+
 class PetDetailView(DetailView):
     """
     Отображает детальную информацию о конкретном животном.
@@ -44,10 +55,40 @@ class PetDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         # Пытаемся получить родословную, если она существует
         try:
-            context['pedigree'] = self.object.pedigree  # type: ignore
+            context['pedigree'] = self.object.pedigree # type: ignore
         except Pedigree.DoesNotExist:
             context['pedigree'] = None
+
+        # Добавляем информацию о правах пользователя
+        user = self.request.user
+        context['is_moderator'] = user.groups.filter(name='Moderator').exists()
+        context['is_admin'] = user.is_staff or user.is_superuser
+        context['is_owner'] = self.object.owner == user # type: ignore
+        context['can_deactivate'] = self.object.can_deactivate(user) # type: ignore
+        context['can_delete'] = self.object.can_delete(user) # type: ignore
+
         return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form) # type: ignore
+        pedigree_formset = PedigreeFormSet(self.request.POST, self.request.FILES, instance=self.object) # type: ignore
+        if pedigree_formset.is_valid():
+            pedigree_formset.save()
+        return response
+
+    def test_func(self):
+        pet = self.get_object()
+        user = self.request.user
+        # Владелец, модератор или админ могут редактировать
+        return (
+            pet.owner == user or # type: ignore
+            user.groups.filter(name='Moderator').exists() or
+            user.is_staff or
+            user.is_superuser
+        )
+
+    def get_success_url(self):
+        return reverse_lazy('pet_detail', kwargs={'pk': self.object.pk}) # type: ignore
 
 class PetCreateView(LoginRequiredMixin, CreateView):
     """
@@ -96,7 +137,13 @@ class PetUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         pet = self.get_object()
-        return pet.owner == self.request.user or self.request.user.is_superuser  # type: ignore
+        user = self.request.user
+        # Владелец, модератор или админ могут редактировать
+        return (
+            pet.owner == user or                # type: ignore
+            user.groups.filter(name='Moderator').exists() or
+            user.is_superuser
+        )  
 
     def get_success_url(self):
         return reverse_lazy('pet_detail', kwargs={'pk': self.object.pk})  # type: ignore
@@ -111,8 +158,8 @@ class PetDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         pet = self.get_object()
-        # Владелец или админ может удалять
-        return pet.owner == self.request.user or self.request.user.is_staff # type: ignore
+        # Только админ может удалять
+        return pet.can_delete(self.request.user)  # type: ignore
 
 # ========================
 # API ViewSet (остаётся как есть)
@@ -125,3 +172,23 @@ class PetViewSet(viewsets.ModelViewSet):
     queryset = Pet.objects.all()
     serializer_class = PetSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+class PetDeactivateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        pet = get_object_or_404(Pet, pk=pk)
+        if pet.can_deactivate(request.user):
+            pet.deactivate()
+            messages.success(request, f"Питомец '{pet.name}' деактивирован.")
+        else:
+            messages.error(request, "У вас нет прав для деактивации этого питомца.")
+        return redirect('pet_detail', pk=pk)
+
+class PetActivateView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        pet = get_object_or_404(Pet, pk=pk)
+        if pet.can_deactivate(request.user):  # Тот же метод — активировать может, кто может деактивировать
+            pet.activate()
+            messages.success(request, f"Питомец '{pet.name}' активирован.")
+        else:
+            messages.error(request, "У вас нет прав для активации этого питомца.")
+        return redirect('pet_detail', pk=pk)

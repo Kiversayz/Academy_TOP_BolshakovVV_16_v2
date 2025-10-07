@@ -28,6 +28,7 @@ class Pet(models.Model):
     description = models.TextField(verbose_name="Описание", blank=True)
     image = models.ImageField(upload_to='pets/', verbose_name="Фотография", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата добавления")
+    deactivated_at = models.DateTimeField(verbose_name="Дата деактивации", blank=True, null=True)
     
     class Meta:
         db_table = 'nursery_pet'  # Имя таблицы в базе данных
@@ -67,6 +68,35 @@ class Pet(models.Model):
             age_in_months -= 1
 
         return max(age_in_months, 0)  # Возраст не может быть отрицательным
+    
+    def is_active(self):
+        """Возвращает True, если питомец активен (deactivated_at пуст)."""
+        return self.deactivated_at is None
+
+    def deactivate(self):
+        """Деактивировать питомца (установить дату деактивации)."""
+        if self.deactivated_at is None:
+            self.deactivated_at = timezone.now()
+            self.save()
+
+    def activate(self):
+        """Активировать питомца (очистить дату деактивации)."""
+        if self.deactivated_at is not None:
+            self.deactivated_at = None
+            self.save()
+    
+    def can_deactivate(self, user):
+        """Проверяет, может ли пользователь деактивировать питомца."""
+        return (
+            self.owner == user or  # Владелец
+            user.groups.filter(name='Moderator').exists() or  # Модератор
+            user.is_staff or  # Админ
+            user.is_superuser
+        )
+
+    def can_delete(self, user):
+        """Проверяет, может ли пользователь удалить питомца."""
+        return user.is_staff or user.is_superuser
 
 
 class Pedigree(models.Model):
