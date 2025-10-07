@@ -123,7 +123,7 @@ class UserProfileUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
     def get_success_url(self):
         """Куда перенаправить после успешного обновления."""
         # Перенаправляем на страницу профиля пользователя, которого редактировали
-        return reverse_lazy('user:user_detail', kwargs={'pk': self.object.user.pk}) # Используем пространство имен
+        return reverse_lazy('user:user_detail', kwargs={'pk': self.object.user.pk}) # type: ignore # Используем пространство имен
 
     # Убедитесь, что reverse_lazy импортирован и используется правильно
     from django.urls import reverse_lazy
