@@ -7,7 +7,7 @@
         <h1>Добро пожаловать в AcademyTop!</h1>
         <p class="lead">Выберите, что вас интересует:</p>
         <div class="mt-4">
-            <a href="{% url 'pet_list' %}" class="btn btn-primary btn-lg me-3">Питомцы</a>
+            <a href="{% url 'nursery:pet_list' %}" class="btn btn-primary btn-lg me-3">Питомцы</a>
             {% if user.is_authenticated %}
                 <a href="{% url 'user:profile' %}" class="btn btn-success btn-lg">Мой профиль</a>
             {% else %}

@@ -17,6 +17,8 @@ from core.forms import PetCommentForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 
 # ========================
@@ -39,6 +41,7 @@ class PetListView(ListView):
     model = Pet
     template_name = 'nursery/pet_list.html'
     context_object_name = 'pets'
+    paginate_by = 5  # Показывать по 5 питомцев на странице
 
     def get_queryset(self):
         # Показываем только активных питомцев
@@ -52,39 +55,49 @@ class PetDetailView(DetailView):
     model = Pet
     template_name = 'nursery/pet_detail.html'
     context_object_name = 'pet'
+    slug_field = 'slug'  # Указывает, по какому полю искать
+    slug_url_kwarg = 'slug'  # Имя переменной в URL
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         pet = self.object
-        
-        # --- Логика для комментариев ---
-        # Получаем комментарии для этого питомца, отсортированные по created_at (старые первыми)
-        # ordering = ['created_at'] в Meta должно это обеспечить, но явно укажем для надежности
-        comments = pet.comments.select_related('author__profile').all()   # type: ignore
 
-        # select_related('author') оптимизирует запросы, извлекая данные User сразу
-        
-        # Форма для нового комментария
-        comment_form = PetCommentForm()
+        # --- Логика для комментариев с пагинацией ---
+        comment_list = pet.comments.select_related('author__profile').order_by('created_at') # type: ignore
+        paginator = Paginator(comment_list, 5)  # Показывать по 5 комментариев на странице
+        page_number = self.request.GET.get('page')
+        try:
+            comments = paginator.page(page_number)
+        except PageNotAnInteger:
+            # Если страница не является целым числом, показываем первую страницу
+            comments = paginator.page(1)
+        except EmptyPage:
+            # Если страница выходит за пределы допустимого диапазона, показываем последнюю страницу
+            comments = paginator.page(paginator.num_pages)
 
+        # Передаём в контекст:
+        # - comments (это объект Page, содержит .object_list и данные для пагинации)
+        # - is_paginated (булево, нужно для шаблона)
+        # - page_obj (объект Page, нужно для шаблона)
         context['comments'] = comments
-        context['comment_form'] = comment_form
-        # -----------------------------
+        context['is_paginated'] = paginator.num_pages > 1
+        context['page_obj'] = comments
+        # ------------------------------------------
 
-        # ... (ваша существующая логика для pedigree, прав и т.д.) ...
+        # Форма для нового комментария
+        context['comment_form'] = PetCommentForm()
+
+        # ... (остальная логика для pedigree, прав и т.д.) ...
         try:
             context['pedigree'] = pet.pedigree # type: ignore
-
-        except Pedigree.DoesNotExist: # Убедитесь, что Pedigree импортирован
+        except Pedigree.DoesNotExist:  # Убедись, что Pedigree импортирован
             context['pedigree'] = None
-            
+
         user = self.request.user
         context['is_moderator'] = user.groups.filter(name='Moderator').exists()
         context['is_admin'] = user.is_staff or user.is_superuser
         context['is_owner'] = pet.owner == user # type: ignore
-
-        context['can_deactivate'] = pet.can_deactivate(user) # type: ignore
-
+        context['can_deactivate'] = pet.can_deactivate(user)
         context['can_delete'] = pet.can_delete(user) # type: ignore
 
         return context
@@ -108,7 +121,7 @@ class PetDetailView(DetailView):
         )
 
     def get_success_url(self):
-        return reverse_lazy('pet_detail', kwargs={'pk': self.object.pk}) # type: ignore
+        return reverse_lazy('nursery:pet_detail', kwargs={'slug': self.object.slug}) # type: ignore
     
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
@@ -119,34 +132,27 @@ class PetDetailView(DetailView):
         # --- Логика для добавления комментария ---
     # Добавляем возможность POST-запроса к этой же странице для создания комментария
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object() # Получаем объект Pet
+        self.object = self.get_object()
         pet = self.object
-        
-        # Проверка аутентификации (можно вынести в декоратор или миксин)
+
+        # Проверка аутентификации
         if not request.user.is_authenticated:
-             # Можно вернуть ошибку или перенаправить на логин
-             from django.contrib.auth import REDIRECT_FIELD_NAME
-             from django.contrib.auth.views import redirect_to_login
-             return redirect_to_login(request.get_full_path(), REDIRECT_FIELD_NAME)
-        
+            from django.contrib.auth import REDIRECT_FIELD_NAME
+            from django.contrib.auth.views import redirect_to_login
+            return redirect_to_login(request.get_full_path(), REDIRECT_FIELD_NAME)
+
         form = PetCommentForm(request.POST)
         if form.is_valid():
             comment = form.save(commit=False)
             comment.pet = pet
-            comment.author = request.user # Устанавливаем автора
+            comment.author = request.user
             comment.save()
-            # Перенаправляем обратно на страницу питомца, чтобы обновить список комментариев
-            # return HttpResponseRedirect(request.path_info) # Простое обновление
-            from django.urls import reverse
-            return HttpResponseRedirect(reverse('pet_detail', args=[pet.pk])) # Явное указание URL
+            # Перенаправляем обратно на страницу питомца
+            return HttpResponseRedirect(reverse_lazy('nursery:pet_detail', kwargs={'slug': pet.slug}))
         else:
-            # Если форма невалидна, отображаем страницу с ошибками
             context = self.get_context_data()
-            context['comment_form'] = form # Передаем форму с ошибками
-            # Можно добавить сообщение об ошибке
-            from django.contrib import messages
-            messages.error(request, 'Ошибка при добавлении комментария. Проверьте форму.')
-            # Возвращаем тот же шаблон с контекстом (включая ошибки формы)
+            context['comment_form'] = form
+            messages.error(request, 'Ошибка при добавлении комментария.')
             return self.render_to_response(context)
 class PetCreateView(LoginRequiredMixin, CreateView):
     """
@@ -155,7 +161,6 @@ class PetCreateView(LoginRequiredMixin, CreateView):
     model = Pet
     form_class = PetForm
     template_name = 'nursery/pet_create.html'
-    success_url = reverse_lazy('pet_list')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -172,6 +177,9 @@ class PetCreateView(LoginRequiredMixin, CreateView):
         if pedigree_formset.is_valid():
             pedigree_formset.save()
         return response
+    
+    def get_success_url(self):
+        return reverse_lazy('nursery:pet_detail', kwargs={'slug': self.object.slug}) # type: ignore
 
 class PetUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Pet
@@ -204,7 +212,7 @@ class PetUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         )  
 
     def get_success_url(self):
-        return reverse_lazy('pet_detail', kwargs={'pk': self.object.pk})  # type: ignore
+        return reverse_lazy('nursery:pet_detail', kwargs={'slug': self.object.slug})  # type: ignore
 
 class PetDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """
@@ -212,7 +220,7 @@ class PetDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """
     model = Pet
     template_name = 'nursery/pet_delete.html'
-    success_url = reverse_lazy('pet_list')
+    success_url = reverse_lazy('nursery:pet_list')
 
     def test_func(self):
         pet = self.get_object()
@@ -232,29 +240,30 @@ class PetViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 class PetDeactivateView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        pet = get_object_or_404(Pet, pk=pk)
+    def post(self, request, slug):
+        pet = get_object_or_404(Pet, slug=slug)
         if pet.can_deactivate(request.user):
             pet.deactivate()
             messages.success(request, f"Питомец '{pet.name}' деактивирован.")
         else:
             messages.error(request, "У вас нет прав для деактивации этого питомца.")
-        return redirect('pet_detail', pk=pk)
+        return redirect('nursery:pet_detail', slug=slug)
 
 class PetActivateView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        pet = get_object_or_404(Pet, pk=pk)
+    def post(self, request, slug):
+        pet = get_object_or_404(Pet, slug=slug)
         if pet.can_deactivate(request.user):  # Тот же метод — активировать может, кто может деактивировать
             pet.activate()
             messages.success(request, f"Питомец '{pet.name}' активирован.")
         else:
             messages.error(request, "У вас нет прав для активации этого питомца.")
-        return redirect('pet_detail', pk=pk)
+        return redirect('nursery:pet_detail', slug=slug)
 
 class PetCommentsListView(ListView):
     model = PetComment
     template_name = 'core/comments_partial.html' # Новый шаблон только для комментариев
     context_object_name = 'comments'
+    paginate_by = 5
 
     def get_queryset(self):
         pet_id = self.kwargs.get('pet_id')

@@ -17,7 +17,7 @@ urlpatterns = [
     # Swagger UI
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/', include('core.urls')),
-    path('nursery/', include('nursery.urls')),
+    path('nursery/', include('nursery.urls', namespace='nursery')),
     path('user/', include('user.urls')),
     # HTML-авторизация
     path('accounts/login/', auth_views.LoginView.as_view(), name='login'),

@@ -8,22 +8,22 @@
         <div>
             {% if can_deactivate %}
                 {% if pet.is_active %}
-                    <form method="post" action="{% url 'pet_deactivate' pet.pk %}" style="display:inline;">
+                    <form method="post" action="{% url 'nursery:pet_deactivate' pet.slug %}" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-warning">Деактивировать</button>
                     </form>
                 {% else %}
-                    <form method="post" action="{% url 'pet_activate' pet.pk %}" style="display:inline;">
+                    <form method="post" action="{% url 'nursery:pet_activate' pet.slug %}" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-success">Активировать</button>
                     </form>
                 {% endif %}
             {% endif %}
             {% if is_owner or is_admin or is_moderator %}
-                <a href="{% url 'pet_update' pet.pk %}" class="btn btn-warning">Редактировать</a>
+                <a href="{% url 'nursery:pet_update' pet.slug %}" class="btn btn-warning">Редактировать</a>
             {% endif %}
             {% if can_delete %}
-                <a href="{% url 'pet_delete' pet.pk %}" class="btn btn-danger">Удалить</a>
+                <a href="{% url 'nursery:pet_delete' pet.slug %}" class="btn btn-danger">Удалить</a>
             {% endif %}
         </div>
     </div>
@@ -69,7 +69,7 @@
                 <p><strong>Родословная:</strong> Не указана</p>
             {% endif %}
 
-            <a href="{% url 'pet_list' %}" class="btn btn-secondary">Назад к питомцам</a>
+            <a href="{% url 'nursery:pet_list' %}" class="btn btn-secondary">Назад к питомцам</a>
         </div>
     </div>
     <!-- Cекция: Комментарии -->
@@ -79,7 +79,7 @@
         <!-- Форма добавления комментария -->
         {% if user.is_authenticated %}
         <div class="mb-4">
-            <form method="post" action="{% url 'pet_detail' pet.pk %}">
+            <form method="post" action="{% url 'nursery:pet_detail' pet.slug %}">
                 {% csrf_token %}
                 <div class="mb-3">
                     {{ comment_form.content }}

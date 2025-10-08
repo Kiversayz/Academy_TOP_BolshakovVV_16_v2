@@ -6,6 +6,8 @@ from django.utils import timezone
 from datetime import date
 from django.core.mail import send_mail
 from AcademyTop import settings
+import uuid
+from django.utils.text import slugify
 
 # Create your models here.
 
@@ -32,6 +34,7 @@ class Pet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата добавления")
     deactivated_at = models.DateTimeField(verbose_name="Дата деактивации", blank=True, null=True)
     views_count = models.PositiveIntegerField(default=0, verbose_name="Количество просмотров")
+    slug = models.SlugField(unique=True, blank=True, null=True, verbose_name="URL")
     
     class Meta:
         db_table = 'nursery_pet'  # Имя таблицы в базе данных
@@ -42,7 +45,8 @@ class Pet(models.Model):
         return f"{self.name} ({self.breed})"
 
     def get_absolute_url(self):
-        return reverse("pet_detail", kwargs={"pk": self.pk})
+        """Возвращает канонический URL для этого питомца."""
+        return reverse('nursery:pet_detail', kwargs={'slug': self.slug})
     
     def clean(self):
         if self.birth_date:
@@ -119,6 +123,21 @@ class Pet(models.Model):
 
         send_mail(subject, message, from_email, recipient_list, fail_silently=False)
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Генерируем базовый slug
+            base_slug = slugify(self.name)
+            # Если имя пустое или не содержит допустимых символов
+            if not base_slug:
+                base_slug = f"pet-{uuid.uuid4().hex[:8]}" # Уникальный slug
+            slug = base_slug
+            counter = 1
+            # Проверяем на уникальность и добавляем суффикс при необходимости
+            while Pet.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
 
 class Pedigree(models.Model):
     pet = models.OneToOneField('Pet', on_delete=models.CASCADE, related_name='pedigree')  # ← Одна родословная на одного питомца
