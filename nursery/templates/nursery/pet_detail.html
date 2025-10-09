@@ -1,0 +1,111 @@
+{% extends "nursery/base_nursery.html" %}
+
+{% block title %}{{ pet.name }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>{{ pet.name }}</h1>
+        <div>
+            {% if can_deactivate %}
+                {% if pet.is_active %}
+                    <form method="post" action="{% url 'nursery:pet_deactivate' pet.slug %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning">Деактивировать</button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{% url 'nursery:pet_activate' pet.slug %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">Активировать</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            {% if is_owner or is_admin or is_moderator %}
+                <a href="{% url 'nursery:pet_update' pet.slug %}" class="btn btn-warning">Редактировать</a>
+            {% endif %}
+            {% if can_delete %}
+                <a href="{% url 'nursery:pet_delete' pet.slug %}" class="btn btn-danger">Удалить</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            {% if pet.image %}
+                <img src="{{ pet.image.url }}" class="img-fluid" alt="{{ pet.name }}">
+            {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                    Нет фото
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h3>Информация</h3>
+            <p><strong>Владелец:</strong> {{ pet.owner.username }}</p>
+            <p><strong>Порода:</strong> {{ pet.breed }}</p>
+            <p><strong>Семейство:</strong> {{ pet.family }}</p>
+            <p><strong>Тип:</strong> {{ pet.get_animal_type_display }}</p>
+            <p><strong>Дата рождения:</strong> {{ pet.birth_date|default:"Не указана" }}</p>
+            <p><strong>Возраст:</strong> 
+                {% if pet.birth_date %}
+                    {{ pet.get_age_in_months }} месяцев
+                {% else %}
+                    Не указан
+                {% endif %}
+            </p>
+            <p><strong>Цена:</strong> {{ pet.price }} {{ pet.currency }}</p>
+            <p><strong>Гипоаллергенный:</strong> {% if pet.hypoallergenic %}Да{% else %}Нет{% endif %}</p>
+            <p><strong>Рацион:</strong> {{ pet.feeding_type|default:"Не указан" }}</p>
+            <p><strong>Описание:</strong> {{ pet.description|default:"Нет описания" }}</p>
+            <p><strong>Просмотры:</strong> {{ pet.views_count|default:"0" }}</p>
+            <!-- Новая секция: Родословная -->
+            {% if pedigree %}
+                <h4>Родословная</h4>
+                <p><strong>Мать:</strong> {{ pedigree.mother|default:"Не указана" }}</p>
+                <p><strong>Отец:</strong> {{ pedigree.father|default:"Не указан" }}</p>
+                <p><strong>Поколение:</strong> {{ pedigree.generation|default:"1" }}</p>
+                <p><strong>Дата разведения:</strong> {{ pedigree.breeding_date|default:"Не указана" }}</p>
+                <p><strong>Примечания:</strong> {{ pedigree.notes|default:"Нет" }}</p>
+            {% else %}
+                <p><strong>Родословная:</strong> Не указана</p>
+            {% endif %}
+
+            <a href="{% url 'nursery:pet_list' %}" class="btn btn-secondary">Назад к питомцам</a>
+        </div>
+    </div>
+    <!-- Cекция: Комментарии -->
+    <div class="mt-5">
+        <h3>Комментарии</h3>
+
+        <!-- Форма добавления комментария -->
+        {% if user.is_authenticated %}
+        <div class="mb-4">
+            <form method="post" action="{% url 'nursery:pet_detail' pet.slug %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ comment_form.content }}
+                    {% if comment_form.content.errors %}
+                    <div class="text-danger">
+                        {{ comment_form.content.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">Добавить комментарий</button>
+            </form>
+            {% if messages %}
+            {% for message in messages %}
+            {% if message.tags == 'error' %}
+            <div class="alert alert-danger mt-2">{{ message }}</div>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% else %}
+        <p><a href="{% url 'login' %}">Войдите</a>, чтобы оставить комментарий.</p>
+        {% endif %}
+
+        <!-- Блок с комментариями -->
+        <div id="comments-list">
+            {% include 'core/comments_partial.html' %} <!-- Подключаем шаблон списка комментариев -->
+        </div>
+    </div>
+{% endblock %}

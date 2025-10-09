@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product
+from .models import Product, PetComment
 
 """ 
 serializers.ModelSerializer – базовый класс, который автоматически генерирует поля на основе модели.
@@ -11,4 +11,10 @@ class ProductSerializer(serializers.ModelSerializer):
     """Как переводить Product ↔ JSON."""
     class Meta:
         model = Product             # → источник данных
+        fields = '__all__'          # → все поля модели (id, name, price, created)
+
+class PetCommentSerializer(serializers.ModelSerializer):
+    """Как переводить Product ↔ JSON."""
+    class Meta:
+        model = PetComment             # → источник данных
         fields = '__all__'          # → все поля модели (id, name, price, created)

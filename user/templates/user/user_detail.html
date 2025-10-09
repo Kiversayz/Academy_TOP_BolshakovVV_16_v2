@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль {{ target_user.username }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Профиль: {{ target_user.username }}</h1>
+        <!-- Показываем кнопки в зависимости от прав -->
+        {% if can_edit_profile %}
+            <a href="{% url 'user:user_profile_update' target_user.pk %}" class="btn btn-primary">
+                Редактировать профиль
+            </a>
+        {% endif %}
+        {% if can_change_password %}
+            <a href="{% url 'user:password_change' %}" class="btn btn-primary">Изменить пароль</a>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Основная информация</h3>
+            <p><strong>Имя пользователя:</strong> {{ target_user.username }}</p>
+            <p><strong>Email:</strong> {{ target_user.email }}</p>
+            <p><strong>Имя:</strong> {{ target_user.first_name|default:"Не указано" }}</p>
+            <p><strong>Фамилия:</strong> {{ target_user.last_name|default:"Не указана" }}</p>
+        </div>
+        <div class="col-md-6">
+            <h3>Дополнительная информация</h3>
+            <p><strong>Телефон:</strong> {{ profile.phone|default:"Не указан" }}</p>
+            <p><strong>Дата рождения:</strong> {{ profile.birth_date|default:"Не указана" }}</p>
+            <p><strong>Город:</strong> {{ profile.city|default:"Не указан" }}</p>
+            <p><strong>Статус:</strong> {% if profile.is_premium %}Премиум{% else %}Обычный{% endif %}</p>
+            <p><strong>О себе:</strong> {{ profile.bio|default:"Нет описания" }}</p>
+            {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" class="img-thumbnail" alt="Аватар" width="200">
+            {% else %}
+                <p>Аватар не загружен</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
