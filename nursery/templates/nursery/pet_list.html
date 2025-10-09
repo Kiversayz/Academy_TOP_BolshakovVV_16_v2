@@ -8,6 +8,14 @@
         <a href="{% url 'nursery:pet_create' %}" class="btn btn-success">Добавить питомца</a>
     </div>
 
+    <!-- Форма поиска -->
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Поиск по имени или типу..." value="{{ search_query }}">
+            <button class="btn btn-outline-secondary" type="submit">Найти</button>
+        </div>
+    </form>
+
     {% if pets %}
         <div class="row">
             {% for pet in pets %}
@@ -36,6 +44,8 @@
     {% else %}
         <p>Питомцев пока нет в наличии.</p>
     {% endif %}
+    
+    <!-- Пагинация -->
     {% if is_paginated %}
         <nav aria-label="Page navigation">
             <ul class="pagination justify-content-center">

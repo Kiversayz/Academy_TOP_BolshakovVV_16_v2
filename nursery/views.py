@@ -11,7 +11,7 @@ from django.views.decorators.cache import cache_page
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
-
+from django.db.models import Q
 from core.models import PetComment
 from core.forms import PetCommentForm
 from django.contrib.auth.decorators import login_required
@@ -44,12 +44,30 @@ class PetListView(ListView):
     paginate_by = 5  # Показывать по 5 питомцев на странице
 
     def get_queryset(self):
-        # Показываем только активных питомцев
-        # Если пользователь — модератор или админ, он видит и неактивных
+        # --- Фильтрация по активности ---
         if self.request.user.is_staff or self.request.user.is_superuser:
-            return Pet.objects.all()
+            queryset = Pet.objects.all()
         else:
-            return Pet.objects.filter(deactivated_at__isnull=True)
+            queryset = Pet.objects.filter(deactivated_at__isnull=True)
+
+        # --- Поиск ---
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) |
+                Q(animal_type__icontains=search_query)
+            )
+
+        # --- Сортировка ---
+        queryset = queryset.order_by('name')
+
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Передаём поисковый запрос в шаблон, чтобы сохранить его в поле ввода
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
 class PetDetailView(DetailView):
     model = Pet
@@ -67,7 +85,7 @@ class PetDetailView(DetailView):
         paginator = Paginator(comment_list, 5)  # Показывать по 5 комментариев на странице
         page_number = self.request.GET.get('page')
         try:
-            comments = paginator.page(page_number)
+            comments = paginator.page(page_number) # type: ignore
         except PageNotAnInteger:
             # Если страница не является целым числом, показываем первую страницу
             comments = paginator.page(1)
@@ -97,7 +115,7 @@ class PetDetailView(DetailView):
         context['is_moderator'] = user.groups.filter(name='Moderator').exists()
         context['is_admin'] = user.is_staff or user.is_superuser
         context['is_owner'] = pet.owner == user # type: ignore
-        context['can_deactivate'] = pet.can_deactivate(user)
+        context['can_deactivate'] = pet.can_deactivate(user) # type: ignore
         context['can_delete'] = pet.can_delete(user) # type: ignore
 
         return context
@@ -148,7 +166,7 @@ class PetDetailView(DetailView):
             comment.author = request.user
             comment.save()
             # Перенаправляем обратно на страницу питомца
-            return HttpResponseRedirect(reverse_lazy('nursery:pet_detail', kwargs={'slug': pet.slug}))
+            return HttpResponseRedirect(reverse_lazy('nursery:pet_detail', kwargs={'slug': pet.slug})) # type: ignore   
         else:
             context = self.get_context_data()
             context['comment_form'] = form
